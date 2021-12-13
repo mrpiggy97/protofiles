@@ -6,12 +6,12 @@ import (
 	"time"
 )
 
-func counter(number int64, streamInstance NumService_RndServer, channel chan<- bool) {
+func counter(request *NumRequest, streamInstance NumService_RndServer, channel chan<- bool) {
 	var response *NumResponse = new(NumResponse)
-	for i := 0; i <= int(number); i++ {
+	for i := int(request.From); i <= int(request.To); i++ {
 		response = &NumResponse{
 			CurrentNumber: int64(i),
-			Remaining:     int64(int(number) - i)}
+			Remaining:     int64(int(request.Number) - i)}
 	}
 	var err error = streamInstance.Send(response)
 	if err != nil {
@@ -36,7 +36,7 @@ func (serverInstance *NumServer) Rnd(req *NumRequest, stream NumService_RndServe
 	}
 
 	var done chan bool = make(chan bool, 1)
-	go counter(req.Number, stream, done)
+	go counter(req, stream, done)
 	<-done
 	return nil
 }
