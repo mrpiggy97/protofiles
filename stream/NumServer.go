@@ -11,11 +11,12 @@ func counter(request *NumRequest, streamInstance NumService_RndServer, channel c
 	for i := int(request.From); i <= int(request.To); i++ {
 		response = &NumResponse{
 			CurrentNumber: int64(i),
-			Remaining:     int64(int(request.Number) - i)}
-	}
-	var err error = streamInstance.Send(response)
-	if err != nil {
-		panic(err)
+			Remaining:     int64(int(request.Number) - i),
+		}
+		var err error = streamInstance.Send(response)
+		if err != nil {
+			panic(err)
+		}
 	}
 	time.Sleep(time.Second)
 	channel <- true
