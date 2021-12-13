@@ -1,0 +1,20 @@
+syntax="proto3";
+
+package numbers;
+
+option go_package = "./stream";
+
+message NumRequest{
+    int64 from = 1;
+    int64 to = 2;
+    int64 number = 3;
+}
+
+message NumResponse{
+    int64 currentNumber = 1;
+    int64 remaining = 2;
+}
+
+service NumService{
+    rpc Rnd(NumRequest)returns(stream NumResponse);
+}
