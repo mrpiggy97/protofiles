@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+// counter will recieve 3 values from request object From, To and
+// Number, Number will be the final possible number count
+// To will be the absoulute limit for loop
+// From will set the starting point
 func counter(request *NumRequest, streamInstance NumService_RndServer, channel chan<- bool) {
 	var response *NumResponse = new(NumResponse)
 	for i := int(request.From); i <= int(request.To); i++ {
@@ -13,6 +17,7 @@ func counter(request *NumRequest, streamInstance NumService_RndServer, channel c
 			CurrentNumber: int64(i),
 			Remaining:     int64(int(request.Number) - i),
 		}
+		time.Sleep(time.Millisecond * 50)
 		var err error = streamInstance.Send(response)
 		if err != nil {
 			panic(err)

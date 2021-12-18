@@ -1,0 +1,19 @@
+syntax="proto3";
+
+package numbers;
+
+option go_package = "./stream";
+
+message RandomNumberRequest{
+    int64 number = 1;
+}
+
+message RandomNumberResponse{
+    int64 originalNumber = 1;
+    int64 totalNumber = 2;
+}
+
+service Random{
+    rpc AddRandomNumber(RandomNumberRequest) returns (stream RandomNumberResponse);
+    rpc SubstractRandomNumber(RandomNumberRequest) returns (stream RandomNumberResponse);
+}

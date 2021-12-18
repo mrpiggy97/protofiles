@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package strings;
+
+option go_package = "./stringMethods";
+
+message FormattingResponse{
+    string convertedString = 1;
+}
+
+message FormattingRequest{
+    string stringToConvert = 1;
+}
+
+service StringFormatting{
+    rpc ToCamelCase(FormattingRequest)returns(FormattingResponse);
+}
