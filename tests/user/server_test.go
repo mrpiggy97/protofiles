@@ -1,4 +1,4 @@
-package tests
+package user_test
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 )
 
-var listener *bufconn.Listener = bufconn.Listen(BufSize)
+var listener *bufconn.Listener = bufconn.Listen(1024 * 1024)
 
 func bufDialer(cxt context.Context, str string) (net.Conn, error) {
 	return listener.Dial()
@@ -24,8 +24,8 @@ type serverTestResponse struct {
 
 // server is a testing server meant to be run concurrently
 // and consumed by a client.
-func server(closeServer <-chan bool) {
-	var userServer *user.UserServer = &user.UserServer{}
+func runServer(closeServer <-chan bool) {
+	var userServer *user.Server = &user.Server{}
 	var grpcServer *grpc.Server = grpc.NewServer()
 	user.RegisterUserServiceServer(grpcServer, userServer)
 	grpcServer.Serve(listener)
@@ -35,7 +35,7 @@ func server(closeServer <-chan bool) {
 
 // client is a testing client server meant to run concurrently
 // and consumed by server above.
-func client(testChannel chan<- serverTestResponse, closeServer chan<- bool) {
+func runClient(testChannel chan<- serverTestResponse, closeServer chan<- bool) {
 	var cxt context.Context = context.Background()
 	// connection for test
 	connection, connError := grpc.DialContext(
@@ -72,8 +72,8 @@ func client(testChannel chan<- serverTestResponse, closeServer chan<- bool) {
 func GetUser(testCase *testing.T) {
 	var serverChannel chan serverTestResponse = make(chan serverTestResponse, 2)
 	var stopServerChannel chan bool = make(chan bool, 1)
-	go server(stopServerChannel)
-	go client(serverChannel, stopServerChannel)
+	go runServer(stopServerChannel)
+	go runClient(serverChannel, stopServerChannel)
 	var serverResponse serverTestResponse = <-serverChannel
 	fmt.Println(serverResponse.response.String())
 
@@ -82,6 +82,6 @@ func GetUser(testCase *testing.T) {
 	}
 }
 
-func TestUserServer(testCase *testing.T) {
+func TestServer(testCase *testing.T) {
 	testCase.Run("Action=get-user", GetUser)
 }

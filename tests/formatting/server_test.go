@@ -1,4 +1,4 @@
-package tests
+package formatting_test
 
 import (
 	"context"
@@ -6,34 +6,34 @@ import (
 	"net"
 	"testing"
 
-	"github.com/mrpiggy97/shared-protofiles/stringMethods"
+	"github.com/mrpiggy97/shared-protofiles/formatting"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 )
 
 type formattingClient struct {
-	client stringMethods.StringFormattingClient
+	client formatting.StringFormattingClient
 	conn   *grpc.ClientConn
 }
 
-var formattingServerListener *bufconn.Listener = bufconn.Listen(BufSize)
+var listener *bufconn.Listener = bufconn.Listen(1024 * 1024)
 
 func formattingBufDialer(cxt context.Context, str string) (net.Conn, error) {
-	return formattingServerListener.Dial()
+	return listener.Dial()
 }
 
-func runFormattingServer(closeServer <-chan bool) {
-	var formattingServer *stringMethods.FormattingServer = new(stringMethods.FormattingServer)
+func runServer(closeServer <-chan bool) {
+	var formattingServer *formatting.Server = new(formatting.Server)
 	var grpcServer *grpc.Server = grpc.NewServer()
-	stringMethods.RegisterStringFormattingServer(grpcServer, formattingServer)
-	var err error = grpcServer.Serve(formattingServerListener)
+	formatting.RegisterStringFormattingServer(grpcServer, formattingServer)
+	var err error = grpcServer.Serve(listener)
 	fmt.Println(err)
 	<-closeServer
 	grpcServer.GracefulStop()
-	defer formattingServerListener.Close()
+	defer listener.Close()
 }
 
-func runFormattingClient(clientChannel chan<- formattingClient) {
+func runClient(clientChannel chan<- formattingClient) {
 	var cxt context.Context = context.Background()
 	connection, connError := grpc.DialContext(
 		cxt,
@@ -46,7 +46,7 @@ func runFormattingClient(clientChannel chan<- formattingClient) {
 		panic("failed to establish connection between testing server and client")
 	}
 
-	var client stringMethods.StringFormattingClient = stringMethods.NewStringFormattingClient(
+	var client formatting.StringFormattingClient = formatting.NewStringFormattingClient(
 		connection,
 	)
 	var formatClient formattingClient = formattingClient{
@@ -61,14 +61,14 @@ func toCamelCase(testCase *testing.T) {
 	//prepare server and client
 	var closeServer chan bool = make(chan bool, 1)
 	var getClient chan formattingClient = make(chan formattingClient, 1)
-	go runFormattingServer(closeServer)
-	go runFormattingClient(getClient)
+	go runServer(closeServer)
+	go runClient(getClient)
 
 	//recieve client
 	var client formattingClient = <-getClient
 
 	//make request to server
-	var request *stringMethods.FormattingRequest = &stringMethods.FormattingRequest{
+	var request *formatting.FormattingRequest = &formatting.FormattingRequest{
 		StringToConvert: "FABIAN-jEsus-rivas",
 	}
 	response, resError := client.client.ToCamelCase(context.Background(), request)
@@ -97,14 +97,14 @@ func toLowerCase(testCase *testing.T) {
 	//set up servers
 	var closeServer chan bool = make(chan bool, 1)
 	var getClient chan formattingClient = make(chan formattingClient, 1)
-	go runFormattingServer(closeServer)
-	go runFormattingClient(getClient)
+	go runServer(closeServer)
+	go runClient(getClient)
 
 	//get client
 	var client formattingClient = <-getClient
 
 	//run request
-	var request *stringMethods.FormattingRequest = &stringMethods.FormattingRequest{
+	var request *formatting.FormattingRequest = &formatting.FormattingRequest{
 		StringToConvert: "FABIAN-jeSus-rivas",
 	}
 
@@ -134,14 +134,14 @@ func toUpperCase(testCase *testing.T) {
 	//run servers
 	var stopServer chan bool = make(chan bool, 1)
 	var getClient chan formattingClient = make(chan formattingClient, 1)
-	go runFormattingServer(stopServer)
-	go runFormattingClient(getClient)
+	go runServer(stopServer)
+	go runClient(getClient)
 
 	//get client
 	var formatClient formattingClient = <-getClient
 
 	//make request
-	var request *stringMethods.FormattingRequest = &stringMethods.FormattingRequest{
+	var request *formatting.FormattingRequest = &formatting.FormattingRequest{
 		StringToConvert: "fabian-JeSus-RIVAS",
 	}
 
@@ -165,7 +165,7 @@ func toUpperCase(testCase *testing.T) {
 	stopServer <- true
 	defer formatClient.conn.Close()
 }
-func TestFormattingServer(testCase *testing.T) {
+func TestServer(testCase *testing.T) {
 	testCase.Run("Action=to-camel-case", toCamelCase)
 	testCase.Run("Action=to-lower-case", toLowerCase)
 	testCase.Run("Action=to-upper-case", toUpperCase)
