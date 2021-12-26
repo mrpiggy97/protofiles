@@ -13,7 +13,7 @@ message RandomNumberResponse{
     int64 totalNumber = 2;
 }
 
-service Random{
+service RandomService{
     rpc AddRandomNumber(RandomNumberRequest) returns (stream RandomNumberResponse);
     rpc SubstractRandomNumber(RandomNumberRequest) returns (stream RandomNumberResponse);
 }

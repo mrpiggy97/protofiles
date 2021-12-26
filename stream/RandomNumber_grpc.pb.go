@@ -14,28 +14,28 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// RandomClient is the client API for Random service.
+// RandomServiceClient is the client API for RandomService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type RandomClient interface {
-	AddRandomNumber(ctx context.Context, in *RandomNumberRequest, opts ...grpc.CallOption) (Random_AddRandomNumberClient, error)
-	SubstractRandomNumber(ctx context.Context, in *RandomNumberRequest, opts ...grpc.CallOption) (Random_SubstractRandomNumberClient, error)
+type RandomServiceClient interface {
+	AddRandomNumber(ctx context.Context, in *RandomNumberRequest, opts ...grpc.CallOption) (RandomService_AddRandomNumberClient, error)
+	SubstractRandomNumber(ctx context.Context, in *RandomNumberRequest, opts ...grpc.CallOption) (RandomService_SubstractRandomNumberClient, error)
 }
 
-type randomClient struct {
+type randomServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewRandomClient(cc grpc.ClientConnInterface) RandomClient {
-	return &randomClient{cc}
+func NewRandomServiceClient(cc grpc.ClientConnInterface) RandomServiceClient {
+	return &randomServiceClient{cc}
 }
 
-func (c *randomClient) AddRandomNumber(ctx context.Context, in *RandomNumberRequest, opts ...grpc.CallOption) (Random_AddRandomNumberClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Random_ServiceDesc.Streams[0], "/numbers.Random/AddRandomNumber", opts...)
+func (c *randomServiceClient) AddRandomNumber(ctx context.Context, in *RandomNumberRequest, opts ...grpc.CallOption) (RandomService_AddRandomNumberClient, error) {
+	stream, err := c.cc.NewStream(ctx, &RandomService_ServiceDesc.Streams[0], "/numbers.RandomService/AddRandomNumber", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &randomAddRandomNumberClient{stream}
+	x := &randomServiceAddRandomNumberClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -45,16 +45,16 @@ func (c *randomClient) AddRandomNumber(ctx context.Context, in *RandomNumberRequ
 	return x, nil
 }
 
-type Random_AddRandomNumberClient interface {
+type RandomService_AddRandomNumberClient interface {
 	Recv() (*RandomNumberResponse, error)
 	grpc.ClientStream
 }
 
-type randomAddRandomNumberClient struct {
+type randomServiceAddRandomNumberClient struct {
 	grpc.ClientStream
 }
 
-func (x *randomAddRandomNumberClient) Recv() (*RandomNumberResponse, error) {
+func (x *randomServiceAddRandomNumberClient) Recv() (*RandomNumberResponse, error) {
 	m := new(RandomNumberResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -62,12 +62,12 @@ func (x *randomAddRandomNumberClient) Recv() (*RandomNumberResponse, error) {
 	return m, nil
 }
 
-func (c *randomClient) SubstractRandomNumber(ctx context.Context, in *RandomNumberRequest, opts ...grpc.CallOption) (Random_SubstractRandomNumberClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Random_ServiceDesc.Streams[1], "/numbers.Random/SubstractRandomNumber", opts...)
+func (c *randomServiceClient) SubstractRandomNumber(ctx context.Context, in *RandomNumberRequest, opts ...grpc.CallOption) (RandomService_SubstractRandomNumberClient, error) {
+	stream, err := c.cc.NewStream(ctx, &RandomService_ServiceDesc.Streams[1], "/numbers.RandomService/SubstractRandomNumber", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &randomSubstractRandomNumberClient{stream}
+	x := &randomServiceSubstractRandomNumberClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -77,16 +77,16 @@ func (c *randomClient) SubstractRandomNumber(ctx context.Context, in *RandomNumb
 	return x, nil
 }
 
-type Random_SubstractRandomNumberClient interface {
+type RandomService_SubstractRandomNumberClient interface {
 	Recv() (*RandomNumberResponse, error)
 	grpc.ClientStream
 }
 
-type randomSubstractRandomNumberClient struct {
+type randomServiceSubstractRandomNumberClient struct {
 	grpc.ClientStream
 }
 
-func (x *randomSubstractRandomNumberClient) Recv() (*RandomNumberResponse, error) {
+func (x *randomServiceSubstractRandomNumberClient) Recv() (*RandomNumberResponse, error) {
 	m := new(RandomNumberResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -94,96 +94,96 @@ func (x *randomSubstractRandomNumberClient) Recv() (*RandomNumberResponse, error
 	return m, nil
 }
 
-// RandomServer is the server API for Random service.
-// All implementations must embed UnimplementedRandomServer
+// RandomServiceServer is the server API for RandomService service.
+// All implementations must embed UnimplementedRandomServiceServer
 // for forward compatibility
-type RandomServer interface {
-	AddRandomNumber(*RandomNumberRequest, Random_AddRandomNumberServer) error
-	SubstractRandomNumber(*RandomNumberRequest, Random_SubstractRandomNumberServer) error
-	mustEmbedUnimplementedRandomServer()
+type RandomServiceServer interface {
+	AddRandomNumber(*RandomNumberRequest, RandomService_AddRandomNumberServer) error
+	SubstractRandomNumber(*RandomNumberRequest, RandomService_SubstractRandomNumberServer) error
+	mustEmbedUnimplementedRandomServiceServer()
 }
 
-// UnimplementedRandomServer must be embedded to have forward compatible implementations.
-type UnimplementedRandomServer struct {
+// UnimplementedRandomServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedRandomServiceServer struct {
 }
 
-func (UnimplementedRandomServer) AddRandomNumber(*RandomNumberRequest, Random_AddRandomNumberServer) error {
+func (UnimplementedRandomServiceServer) AddRandomNumber(*RandomNumberRequest, RandomService_AddRandomNumberServer) error {
 	return status.Errorf(codes.Unimplemented, "method AddRandomNumber not implemented")
 }
-func (UnimplementedRandomServer) SubstractRandomNumber(*RandomNumberRequest, Random_SubstractRandomNumberServer) error {
+func (UnimplementedRandomServiceServer) SubstractRandomNumber(*RandomNumberRequest, RandomService_SubstractRandomNumberServer) error {
 	return status.Errorf(codes.Unimplemented, "method SubstractRandomNumber not implemented")
 }
-func (UnimplementedRandomServer) mustEmbedUnimplementedRandomServer() {}
+func (UnimplementedRandomServiceServer) mustEmbedUnimplementedRandomServiceServer() {}
 
-// UnsafeRandomServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to RandomServer will
+// UnsafeRandomServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to RandomServiceServer will
 // result in compilation errors.
-type UnsafeRandomServer interface {
-	mustEmbedUnimplementedRandomServer()
+type UnsafeRandomServiceServer interface {
+	mustEmbedUnimplementedRandomServiceServer()
 }
 
-func RegisterRandomServer(s grpc.ServiceRegistrar, srv RandomServer) {
-	s.RegisterService(&Random_ServiceDesc, srv)
+func RegisterRandomServiceServer(s grpc.ServiceRegistrar, srv RandomServiceServer) {
+	s.RegisterService(&RandomService_ServiceDesc, srv)
 }
 
-func _Random_AddRandomNumber_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _RandomService_AddRandomNumber_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(RandomNumberRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(RandomServer).AddRandomNumber(m, &randomAddRandomNumberServer{stream})
+	return srv.(RandomServiceServer).AddRandomNumber(m, &randomServiceAddRandomNumberServer{stream})
 }
 
-type Random_AddRandomNumberServer interface {
+type RandomService_AddRandomNumberServer interface {
 	Send(*RandomNumberResponse) error
 	grpc.ServerStream
 }
 
-type randomAddRandomNumberServer struct {
+type randomServiceAddRandomNumberServer struct {
 	grpc.ServerStream
 }
 
-func (x *randomAddRandomNumberServer) Send(m *RandomNumberResponse) error {
+func (x *randomServiceAddRandomNumberServer) Send(m *RandomNumberResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Random_SubstractRandomNumber_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _RandomService_SubstractRandomNumber_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(RandomNumberRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(RandomServer).SubstractRandomNumber(m, &randomSubstractRandomNumberServer{stream})
+	return srv.(RandomServiceServer).SubstractRandomNumber(m, &randomServiceSubstractRandomNumberServer{stream})
 }
 
-type Random_SubstractRandomNumberServer interface {
+type RandomService_SubstractRandomNumberServer interface {
 	Send(*RandomNumberResponse) error
 	grpc.ServerStream
 }
 
-type randomSubstractRandomNumberServer struct {
+type randomServiceSubstractRandomNumberServer struct {
 	grpc.ServerStream
 }
 
-func (x *randomSubstractRandomNumberServer) Send(m *RandomNumberResponse) error {
+func (x *randomServiceSubstractRandomNumberServer) Send(m *RandomNumberResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-// Random_ServiceDesc is the grpc.ServiceDesc for Random service.
+// RandomService_ServiceDesc is the grpc.ServiceDesc for RandomService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Random_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "numbers.Random",
-	HandlerType: (*RandomServer)(nil),
+var RandomService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "numbers.RandomService",
+	HandlerType: (*RandomServiceServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "AddRandomNumber",
-			Handler:       _Random_AddRandomNumber_Handler,
+			Handler:       _RandomService_AddRandomNumber_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "SubstractRandomNumber",
-			Handler:       _Random_SubstractRandomNumber_Handler,
+			Handler:       _RandomService_SubstractRandomNumber_Handler,
 			ServerStreams: true,
 		},
 	},

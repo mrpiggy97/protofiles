@@ -11,9 +11,7 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 )
 
-const bufSize = 1024 * 1024
-
-var listener *bufconn.Listener = bufconn.Listen(bufSize)
+var listener *bufconn.Listener = bufconn.Listen(BufSize)
 
 func bufDialer(cxt context.Context, str string) (net.Conn, error) {
 	return listener.Dial()

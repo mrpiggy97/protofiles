@@ -19,6 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StringFormattingClient interface {
 	ToCamelCase(ctx context.Context, in *FormattingRequest, opts ...grpc.CallOption) (*FormattingResponse, error)
+	ToLowerCase(ctx context.Context, in *FormattingRequest, opts ...grpc.CallOption) (*FormattingResponse, error)
+	ToUpperCase(ctx context.Context, in *FormattingRequest, opts ...grpc.CallOption) (*FormattingResponse, error)
 }
 
 type stringFormattingClient struct {
@@ -38,11 +40,31 @@ func (c *stringFormattingClient) ToCamelCase(ctx context.Context, in *Formatting
 	return out, nil
 }
 
+func (c *stringFormattingClient) ToLowerCase(ctx context.Context, in *FormattingRequest, opts ...grpc.CallOption) (*FormattingResponse, error) {
+	out := new(FormattingResponse)
+	err := c.cc.Invoke(ctx, "/strings.StringFormatting/ToLowerCase", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *stringFormattingClient) ToUpperCase(ctx context.Context, in *FormattingRequest, opts ...grpc.CallOption) (*FormattingResponse, error) {
+	out := new(FormattingResponse)
+	err := c.cc.Invoke(ctx, "/strings.StringFormatting/ToUpperCase", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StringFormattingServer is the server API for StringFormatting service.
 // All implementations must embed UnimplementedStringFormattingServer
 // for forward compatibility
 type StringFormattingServer interface {
 	ToCamelCase(context.Context, *FormattingRequest) (*FormattingResponse, error)
+	ToLowerCase(context.Context, *FormattingRequest) (*FormattingResponse, error)
+	ToUpperCase(context.Context, *FormattingRequest) (*FormattingResponse, error)
 	mustEmbedUnimplementedStringFormattingServer()
 }
 
@@ -52,6 +74,12 @@ type UnimplementedStringFormattingServer struct {
 
 func (UnimplementedStringFormattingServer) ToCamelCase(context.Context, *FormattingRequest) (*FormattingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToCamelCase not implemented")
+}
+func (UnimplementedStringFormattingServer) ToLowerCase(context.Context, *FormattingRequest) (*FormattingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ToLowerCase not implemented")
+}
+func (UnimplementedStringFormattingServer) ToUpperCase(context.Context, *FormattingRequest) (*FormattingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ToUpperCase not implemented")
 }
 func (UnimplementedStringFormattingServer) mustEmbedUnimplementedStringFormattingServer() {}
 
@@ -84,6 +112,42 @@ func _StringFormatting_ToCamelCase_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StringFormatting_ToLowerCase_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FormattingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StringFormattingServer).ToLowerCase(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/strings.StringFormatting/ToLowerCase",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StringFormattingServer).ToLowerCase(ctx, req.(*FormattingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StringFormatting_ToUpperCase_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FormattingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StringFormattingServer).ToUpperCase(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/strings.StringFormatting/ToUpperCase",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StringFormattingServer).ToUpperCase(ctx, req.(*FormattingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StringFormatting_ServiceDesc is the grpc.ServiceDesc for StringFormatting service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -94,6 +158,14 @@ var StringFormatting_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ToCamelCase",
 			Handler:    _StringFormatting_ToCamelCase_Handler,
+		},
+		{
+			MethodName: "ToLowerCase",
+			Handler:    _StringFormatting_ToLowerCase_Handler,
+		},
+		{
+			MethodName: "ToUpperCase",
+			Handler:    _StringFormatting_ToUpperCase_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

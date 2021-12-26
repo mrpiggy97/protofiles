@@ -1,0 +1,12 @@
+syntax = "proto3";
+package mypkg.calculator.v1;
+option go_package = "./calculation";
+
+service CalculationService {
+    rpc SumStream (stream SumStreamRequest) returns (stream SumStreamResponse);
+}message SumStreamRequest {
+    int32 a = 1;
+    int32 b = 2;
+}message SumStreamResponse {
+    int32 sum = 3;
+}
