@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package strings;
 
-option go_package = "./stringMethods";
+option go_package = "./formatting";
 
 message FormattingResponse{
     string convertedString = 1;

@@ -5,11 +5,11 @@ import (
 	status "google.golang.org/grpc/status"
 )
 
-type CalculationServer struct {
+type Server struct {
 	UnimplementedCalculationServiceServer
 }
 
-func (a CalculationServer) SumStream(stream CalculationService_SumStreamServer) error {
+func (a Server) SumStream(stream CalculationService_SumStreamServer) error {
 	for {
 		sumStreamRequest, err := stream.Recv()
 		if err != nil {

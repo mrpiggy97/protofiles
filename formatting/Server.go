@@ -1,4 +1,4 @@
-package stringMethods
+package formatting
 
 import (
 	"context"
@@ -6,11 +6,11 @@ import (
 	"strings"
 )
 
-type FormattingServer struct {
+type Server struct {
 	UnimplementedStringFormattingServer
 }
 
-func (server *FormattingServer) ToCamelCase(cxt context.Context, request *FormattingRequest) (*FormattingResponse, error) {
+func (server *Server) ToCamelCase(cxt context.Context, request *FormattingRequest) (*FormattingResponse, error) {
 	var currentString string = request.GetStringToConvert()
 	var stringSlice []string = strings.Split(currentString, "-")
 	var formattedString string = ""
@@ -28,7 +28,7 @@ func (server *FormattingServer) ToCamelCase(cxt context.Context, request *Format
 	return response, nil
 }
 
-func (server *FormattingServer) ToLowerCase(cxt context.Context, req *FormattingRequest) (*FormattingResponse, error) {
+func (server *Server) ToLowerCase(cxt context.Context, req *FormattingRequest) (*FormattingResponse, error) {
 	var stringToConvert string = req.GetStringToConvert()
 	var stringSlice []string = strings.Split(stringToConvert, "-")
 	var newString string = ""
@@ -44,7 +44,7 @@ func (server *FormattingServer) ToLowerCase(cxt context.Context, req *Formatting
 	return response, nil
 }
 
-func (server *FormattingServer) ToUpperCase(cxt context.Context, req *FormattingRequest) (*FormattingResponse, error) {
+func (server *Server) ToUpperCase(cxt context.Context, req *FormattingRequest) (*FormattingResponse, error) {
 	var stringToConvert string = req.GetStringToConvert()
 	var stringSlice []string = strings.Split(stringToConvert, "-")
 	var newString string = ""

@@ -1,14 +1,14 @@
-package stream
+package randomNumber
 
 import (
 	"math/rand"
 )
 
-type RandomNumberServer struct {
+type Server struct {
 	UnimplementedRandomServiceServer
 }
 
-func (server *RandomNumberServer) AddRandomNumber(request *RandomNumberRequest, stream RandomService_AddRandomNumberServer) error {
+func (server *Server) AddRandomNumber(request *RandomNumberRequest, stream RandomService_AddRandomNumberServer) error {
 	var randomInt int64 = rand.Int63()
 	for i := 0; i < 100; i++ {
 		var response *RandomNumberResponse = &RandomNumberResponse{
@@ -25,7 +25,7 @@ func (server *RandomNumberServer) AddRandomNumber(request *RandomNumberRequest, 
 	return nil
 }
 
-func (server *RandomNumberServer) SubstractRandomNumber(request *RandomNumberRequest, stream RandomService_SubstractRandomNumberServer) error {
+func (server *Server) SubstractRandomNumber(request *RandomNumberRequest, stream RandomService_SubstractRandomNumberServer) error {
 	var randomInt int64 = rand.Int63()
 	for i := 0; i < 100; i++ {
 		var response *RandomNumberResponse = &RandomNumberResponse{
