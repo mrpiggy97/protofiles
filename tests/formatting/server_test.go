@@ -12,20 +12,20 @@ import (
 )
 
 type formattingClient struct {
-	client formatting.StringFormattingClient
+	client formatting.FormattingServiceClient
 	conn   *grpc.ClientConn
 }
 
 var listener *bufconn.Listener = bufconn.Listen(1024 * 1024)
 
-func formattingBufDialer(cxt context.Context, str string) (net.Conn, error) {
+func bufDialer(cxt context.Context, str string) (net.Conn, error) {
 	return listener.Dial()
 }
 
 func runServer(closeServer <-chan bool) {
 	var formattingServer *formatting.Server = new(formatting.Server)
 	var grpcServer *grpc.Server = grpc.NewServer()
-	formatting.RegisterStringFormattingServer(grpcServer, formattingServer)
+	formatting.RegisterFormattingServiceServer(grpcServer, formattingServer)
 	var err error = grpcServer.Serve(listener)
 	fmt.Println(err)
 	<-closeServer
@@ -39,14 +39,14 @@ func runClient(clientChannel chan<- formattingClient) {
 		cxt,
 		"bufnet",
 		grpc.WithInsecure(),
-		grpc.WithContextDialer(formattingBufDialer),
+		grpc.WithContextDialer(bufDialer),
 	)
 
 	if connError != nil {
 		panic("failed to establish connection between testing server and client")
 	}
 
-	var client formatting.StringFormattingClient = formatting.NewStringFormattingClient(
+	var client formatting.FormattingServiceClient = formatting.NewFormattingServiceClient(
 		connection,
 	)
 	var formatClient formattingClient = formattingClient{
