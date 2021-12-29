@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync"
 	"testing"
 
 	"github.com/mrpiggy97/shared-protofiles/formatting"
@@ -22,13 +23,13 @@ func bufDialer(cxt context.Context, str string) (net.Conn, error) {
 	return listener.Dial()
 }
 
-func runServer(closeServer <-chan bool) {
+func runServer(closeServer *sync.WaitGroup) {
 	var formattingServer *formatting.Server = new(formatting.Server)
 	var grpcServer *grpc.Server = grpc.NewServer()
 	formatting.RegisterFormattingServiceServer(grpcServer, formattingServer)
 	var err error = grpcServer.Serve(listener)
 	fmt.Println(err)
-	<-closeServer
+	closeServer.Wait()
 	grpcServer.GracefulStop()
 	defer listener.Close()
 }
@@ -59,7 +60,8 @@ func runClient(clientChannel chan<- formattingClient) {
 func toCamelCase(testCase *testing.T) {
 
 	//prepare server and client
-	var closeServer chan bool = make(chan bool, 1)
+	var closeServer *sync.WaitGroup = new(sync.WaitGroup)
+	closeServer.Add(1)
 	var getClient chan formattingClient = make(chan formattingClient, 1)
 	go runServer(closeServer)
 	go runClient(getClient)
@@ -89,13 +91,14 @@ func toCamelCase(testCase *testing.T) {
 	}
 
 	//close servers
-	closeServer <- true
+	defer closeServer.Done()
 	defer client.conn.Close()
 }
 
 func toLowerCase(testCase *testing.T) {
 	//set up servers
-	var closeServer chan bool = make(chan bool, 1)
+	var closeServer *sync.WaitGroup = new(sync.WaitGroup)
+	closeServer.Add(1)
 	var getClient chan formattingClient = make(chan formattingClient, 1)
 	go runServer(closeServer)
 	go runClient(getClient)
@@ -125,16 +128,17 @@ func toLowerCase(testCase *testing.T) {
 	}
 
 	//close servers
-	closeServer <- true
+	defer closeServer.Done()
 	defer client.conn.Close()
 }
 
 func toUpperCase(testCase *testing.T) {
 
 	//run servers
-	var stopServer chan bool = make(chan bool, 1)
+	var closeServer *sync.WaitGroup = new(sync.WaitGroup)
+	closeServer.Add(1)
 	var getClient chan formattingClient = make(chan formattingClient, 1)
-	go runServer(stopServer)
+	go runServer(closeServer)
 	go runClient(getClient)
 
 	//get client
@@ -162,7 +166,7 @@ func toUpperCase(testCase *testing.T) {
 	}
 
 	//close servers
-	stopServer <- true
+	defer closeServer.Done()
 	defer formatClient.conn.Close()
 }
 func TestServer(testCase *testing.T) {

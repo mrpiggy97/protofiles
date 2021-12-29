@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/mrpiggy97/shared-protofiles/randomNumber"
@@ -25,13 +26,14 @@ func bufDialer(ctx context.Context, str string) (net.Conn, error) {
 }
 
 // runServer will run a test server to be consumed by tests.
-func runServer(stopServer <-chan bool) {
+func runServer(waiter *sync.WaitGroup) {
 	var grpcServer *grpc.Server = grpc.NewServer()
 	var server *randomNumber.Server = new(randomNumber.Server)
 	randomNumber.RegisterRandomServiceServer(grpcServer, server)
 	grpcServer.Serve(listener)
-	<-stopServer
+	waiter.Wait()
 	grpcServer.GracefulStop()
+	defer listener.Close()
 }
 
 // runClient will run a test server to be consumed by tests.
@@ -57,13 +59,14 @@ func runClient(getClient chan<- randomNumberClient) {
 	}
 }
 
-// TestAddRandomNumer will test the methods of Server in randomNumber package
+// TestAddRandomNumer will test randomNumber.Server.AddRandomNumber method
 // Methods that return or have a stream as a request cannot be run effectively
 // by testCase.run(),so it's best to run every test for every method of randomNumber.Server
-// on their own rather then group them in a single test
+// on their own rather then group them in a single test.
 func TestAddRandomNumber(testCase *testing.T) {
 	//run server and client
-	var closeServer chan bool = make(chan bool, 1)
+	var closeServer *sync.WaitGroup = new(sync.WaitGroup)
+	closeServer.Add(1)
 	var getClient chan randomNumberClient = make(chan randomNumberClient, 1)
 	go runServer(closeServer)
 	go runClient(getClient)
@@ -104,6 +107,55 @@ func TestAddRandomNumber(testCase *testing.T) {
 
 	}
 	//close servers
-	closeServer <- true
+	defer closeServer.Done()
+	defer client.conn.Close()
+}
+
+// TestSubstractRandomNumber will test randomNumber.Server.SubstractRandomNumber method
+// Methods that return or have a stream as a request cannot be run effectively
+// by testCase.run(),so it's best to run every test for every method of randomNumber.Server
+// on their own rather then group them in a single test.
+func TestSubstractRandomNumber(testCase *testing.T) {
+	//run test servers
+	var getClient chan randomNumberClient = make(chan randomNumberClient, 1)
+	var closeServer *sync.WaitGroup = new(sync.WaitGroup)
+	closeServer.Add(1)
+	go runServer(closeServer)
+	go runClient(getClient)
+
+	//get client
+	var client randomNumberClient = <-getClient
+
+	//make request
+	var request *randomNumber.RandomNumberRequest = &randomNumber.RandomNumberRequest{
+		Number: 20,
+	}
+	stream, streamError := client.client.SubstractRandomNumber(
+		context.Background(),
+		request,
+	)
+
+	if streamError != nil {
+		panic("failed to establish connection between test servers")
+	}
+
+	//make tests
+	var expectedType string = "*randomNumber.RandomNumberResponse"
+	for {
+		response, responseError := stream.Recv()
+		if responseError != nil && responseError != io.EOF {
+			testCase.Error("responseError can only be nil or io.EOF")
+		}
+		if responseError == io.EOF {
+			break
+		}
+		if reflect.TypeOf(response).String() != expectedType {
+			message := fmt.Sprintf("expected type of response to be %v, instea got %v",
+				expectedType, reflect.TypeOf(response))
+			testCase.Error(message)
+		}
+	}
+
+	defer closeServer.Done()
 	defer client.conn.Close()
 }

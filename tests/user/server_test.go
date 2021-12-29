@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync"
 	"testing"
 
 	"github.com/mrpiggy97/shared-protofiles/user"
@@ -24,18 +25,19 @@ type serverTestResponse struct {
 
 // server is a testing server meant to be run concurrently
 // and consumed by a client.
-func runServer(closeServer <-chan bool) {
+func runServer(waiter *sync.WaitGroup) {
 	var userServer *user.Server = &user.Server{}
 	var grpcServer *grpc.Server = grpc.NewServer()
 	user.RegisterUserServiceServer(grpcServer, userServer)
 	grpcServer.Serve(listener)
-	<-closeServer
+	waiter.Wait()
 	grpcServer.GracefulStop()
+	defer listener.Close()
 }
 
 // client is a testing client server meant to run concurrently
 // and consumed by server above.
-func runClient(testChannel chan<- serverTestResponse, closeServer chan<- bool) {
+func runClient(testChannel chan<- serverTestResponse, waiter *sync.WaitGroup) {
 	var cxt context.Context = context.Background()
 	// connection for test
 	connection, connError := grpc.DialContext(
@@ -63,7 +65,7 @@ func runClient(testChannel chan<- serverTestResponse, closeServer chan<- bool) {
 	}
 	testChannel <- testResponse
 	// tell server we are done using it and that it now can stop
-	closeServer <- true
+	waiter.Done()
 }
 
 // GetUser will run server and client concurrently, it will
@@ -71,9 +73,10 @@ func runClient(testChannel chan<- serverTestResponse, closeServer chan<- bool) {
 // from user.UserServer.go.
 func GetUser(testCase *testing.T) {
 	var serverChannel chan serverTestResponse = make(chan serverTestResponse, 2)
-	var stopServerChannel chan bool = make(chan bool, 1)
-	go runServer(stopServerChannel)
-	go runClient(serverChannel, stopServerChannel)
+	var waiter *sync.WaitGroup = new(sync.WaitGroup)
+	waiter.Add(1)
+	go runServer(waiter)
+	go runClient(serverChannel, waiter)
 	var serverResponse serverTestResponse = <-serverChannel
 	fmt.Println(serverResponse.response.String())
 
