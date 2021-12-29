@@ -12,7 +12,7 @@ message FormattingRequest{
     string stringToConvert = 1;
 }
 
-service StringFormatting{
+service FormattingService{
     rpc ToCamelCase(FormattingRequest)returns(FormattingResponse);
     rpc ToLowerCase(FormattingRequest)returns(FormattingResponse);
     rpc ToUpperCase(FormattingRequest)returns(FormattingResponse);
