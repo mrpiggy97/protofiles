@@ -7,7 +7,7 @@ import (
 )
 
 type Server struct {
-	UnimplementedStringFormattingServer
+	UnimplementedFormattingServiceServer
 }
 
 func (server *Server) ToCamelCase(cxt context.Context, request *FormattingRequest) (*FormattingResponse, error) {
