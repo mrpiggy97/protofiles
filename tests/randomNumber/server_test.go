@@ -20,39 +20,11 @@ type randomNumberClient struct {
 	conn   *grpc.ClientConn
 }
 
-type responseWrapper struct {
-	response      *randomNumber.RandomNumberResponse
-	responseError error
-}
-
-func consumeStream(sendResponse chan<- responseWrapper, stream randomNumber.RandomService_AddRandomNumberClient) {
-	for {
-		res, resErr := stream.Recv()
-		if resErr != nil && resErr != io.EOF {
-			sendResponse <- responseWrapper{
-				response:      res,
-				responseError: resErr,
-			}
-			close(sendResponse)
-			break
-		}
-
-		if resErr == io.EOF {
-			close(sendResponse)
-			break
-		}
-
-		sendResponse <- responseWrapper{
-			response:      res,
-			responseError: nil,
-		}
-	}
-}
-
 func bufDialer(ctx context.Context, str string) (net.Conn, error) {
 	return listener.Dial()
 }
 
+// runServer will run a test server to be consumed by tests.
 func runServer(stopServer <-chan bool) {
 	var grpcServer *grpc.Server = grpc.NewServer()
 	var server *randomNumber.Server = new(randomNumber.Server)
@@ -62,6 +34,7 @@ func runServer(stopServer <-chan bool) {
 	grpcServer.GracefulStop()
 }
 
+// runClient will run a test server to be consumed by tests.
 func runClient(getClient chan<- randomNumberClient) {
 	connection, connError := grpc.DialContext(
 		context.Background(),
@@ -84,6 +57,10 @@ func runClient(getClient chan<- randomNumberClient) {
 	}
 }
 
+// TestAddRandomNumer will test the methods of Server in randomNumber package
+// Methods that return or have a stream as a request cannot be run effectively
+// by testCase.run(),so it's best to run every test for every method of randomNumber.Server
+// on their own rather then group them in a single test
 func TestAddRandomNumber(testCase *testing.T) {
 	//run server and client
 	var closeServer chan bool = make(chan bool, 1)
@@ -109,27 +86,22 @@ func TestAddRandomNumber(testCase *testing.T) {
 	}
 
 	//consume stream
-	var resChannel chan responseWrapper = make(chan responseWrapper, 1)
 	var expectedType string = "*randomNumber.RandomNumberResponse"
-	go consumeStream(resChannel, stream)
 	for {
-		resWrapper, channelAvailable := <-resChannel
-		if channelAvailable {
-			if resWrapper.responseError != nil {
-				message := fmt.Sprintf("resWrapper.responseError should be nil, got %v instead",
-					resWrapper.responseError,
-				)
-				testCase.Error(message)
-			}
-			if reflect.TypeOf(resWrapper.response).String() != expectedType {
-				message := fmt.Sprintf("expected resWrapper.response to have type %v, instead",
-					expectedType)
-				message = fmt.Sprintf("%v, it has %v", message, reflect.TypeOf(resWrapper.response).String())
-				testCase.Error(message)
-			}
-		} else {
+		response, responseError := stream.Recv()
+		if responseError != nil && responseError != io.EOF {
+			testCase.Error("responseError can only be io.EOF")
+		}
+		if responseError == io.EOF {
 			break
 		}
+		if reflect.TypeOf(response).String() != expectedType {
+			message := fmt.Sprintf("expected response to be of type %v,instead it is %v",
+				expectedType, reflect.TypeOf(response).String())
+			testCase.Error(message)
+			break
+		}
+
 	}
 	//close servers
 	closeServer <- true
