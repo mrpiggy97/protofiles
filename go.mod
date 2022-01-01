@@ -1,4 +1,4 @@
-module github.com/mrpiggy97/shared-protofiles
+module github.com/mrpiggy97/sharedProtofiles
 
 go 1.16
 

@@ -10,7 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/mrpiggy97/shared-protofiles/user"
+	"github.com/mrpiggy97/sharedProtofiles/user"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 )

@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/mrpiggy97/shared-protofiles/calculation"
+	"github.com/mrpiggy97/sharedProtofiles/calculation"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 )

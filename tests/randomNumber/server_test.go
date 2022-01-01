@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/mrpiggy97/shared-protofiles/randomNumber"
+	"github.com/mrpiggy97/sharedProtofiles/randomNumber"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 )
