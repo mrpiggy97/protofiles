@@ -3,6 +3,7 @@ package calculation_test
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"reflect"
 	"sync"
@@ -72,37 +73,41 @@ func TestSumStream(testCase *testing.T) {
 
 	//get client
 	var client responseWrap = <-getClient
-
+	stream, streamErr := client.client.SumStream(
+		context.Background(),
+	)
+	if streamErr != nil {
+		testCase.Error("streamErr expected to be nil,instead got ", streamErr)
+	}
 	//make requests
 	for i := 0; i < 10; i++ {
 		var request *calculation.SumStreamRequest = &calculation.SumStreamRequest{
 			A: int32(i),
 			B: int32(i + 5),
 		}
-		stream, streamErr := client.client.SumStream(
-			context.Background(),
-		)
-
-		if streamErr != nil {
-			testCase.Error("streamErr expected to be nil,instead got ", streamErr)
-		}
 		//this line sends request
 		requestError := stream.Send(request)
 		if requestError != nil {
 			testCase.Error("resError expected to be nil,instead got ", requestError)
 		}
-		//this line recieves a response
-		response, responseError := stream.Recv()
-		if responseError != nil {
-			testCase.Error("responseError expected to be nil,instead it is ", responseError)
-		}
-		fmt.Println("client recieved", response.String())
 
+	}
+	stream.CloseSend()
+
+	//consume responses
+	for {
+		res, resError := stream.Recv()
+		if resError != nil && resError != io.EOF {
+			testCase.Error(resError)
+		}
+		if resError == io.EOF {
+			break
+		}
+		fmt.Println("client recieved ", res.String())
 		var expectedType string = "*calculation.SumStreamResponse"
-		if reflect.TypeOf(response).String() != expectedType {
-			testCase.Error("expected type of response to be ", expectedType)
+		if reflect.TypeOf(res).String() != expectedType {
+			testCase.Error("expected type of res to be ", expectedType)
 		}
-
 	}
 
 	defer closeServer.Done()

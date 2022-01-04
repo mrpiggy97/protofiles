@@ -79,13 +79,14 @@ func TestRnd(testCase *testing.T) {
 		message := fmt.Sprintf("expected streamError to be nil, got %v", streamError)
 		testCase.Error(message)
 	}
+	stream.CloseSend()
 
 	var expectedType string = "*num.NumResponse"
 
 	for {
 		response, resError := stream.Recv()
 		if resError != nil && resError != io.EOF {
-			testCase.Error("resError can only be io.EOF")
+			testCase.Error("resError should only be io.EOF")
 		}
 
 		if resError == io.EOF {

@@ -98,6 +98,7 @@ func TestAddRandomNumber(testCase *testing.T) {
 		if responseError == io.EOF {
 			break
 		}
+		fmt.Println(response.String())
 		if reflect.TypeOf(response).String() != expectedType {
 			message := fmt.Sprintf("expected response to be of type %v,instead it is %v",
 				expectedType, reflect.TypeOf(response).String())
@@ -144,11 +145,12 @@ func TestSubstractRandomNumber(testCase *testing.T) {
 	for {
 		response, responseError := stream.Recv()
 		if responseError != nil && responseError != io.EOF {
-			testCase.Error("responseError can only be nil or io.EOF")
+			testCase.Error("responseError should only be nil or io.EOF,instead got ", responseError)
 		}
 		if responseError == io.EOF {
 			break
 		}
+		fmt.Println(response.String())
 		if reflect.TypeOf(response).String() != expectedType {
 			message := fmt.Sprintf("expected type of response to be %v, instea got %v",
 				expectedType, reflect.TypeOf(response))

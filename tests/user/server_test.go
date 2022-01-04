@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math/rand"
 	"net"
 	"reflect"
 	"sync"
@@ -123,31 +122,34 @@ func TestRegisterUsers(testCase *testing.T) {
 	if streamErr != nil {
 		testCase.Error(streamErr)
 	}
-	for i := 0; i <= 100; i++ {
-		var username string = fmt.Sprintf("%v username", i)
-		var password int64 = rand.Int63()
+
+	for i := 0; i <= 10; i++ {
 		var request *user.RegisterUserRequest = &user.RegisterUserRequest{
-			Username: username,
-			Password: fmt.Sprintf("%v", password),
+			Username: fmt.Sprintf("%v username", i),
 		}
-		stream.Send(request)
+		sendingErr := stream.Send(request)
+
+		if sendingErr != nil {
+			testCase.Error(sendingErr)
+		}
+	}
+
+	stream.CloseSend()
+	var expectedType string = "*user.RegisterUserResponse"
+	for {
 		response, responseErr := stream.Recv()
+		fmt.Println(responseErr, "error")
 		if responseErr != nil && responseErr != io.EOF {
-			message := fmt.Sprintf("expected responseError to be io.EOF,got %v instead",
-				responseErr)
-			testCase.Error(message)
+			testCase.Error("responseErr should only be io.EOF")
 		}
-		fmt.Println(response.String())
-		var expectedType string = "*user.RegisterUserResponse"
+		if responseErr == io.EOF {
+			break
+		}
 		if reflect.TypeOf(response).String() != expectedType {
-			message := fmt.Sprintf("expected for response type to be %v,instead it is %v",
+			message := fmt.Sprintf("expected response to be of type %v, instead it is of type %v",
 				expectedType, reflect.TypeOf(response).String())
 			testCase.Error(message)
 		}
-		if response.User.UserId != username {
-			message := fmt.Sprintf("expected response.User.UserId to be %v, instead got %v",
-				username, response.User.UserId)
-			testCase.Error(message)
-		}
+		fmt.Println(response.String())
 	}
 }
