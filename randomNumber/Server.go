@@ -13,12 +13,12 @@ func (server *Server) AddRandomNumber(request *RandomNumberRequest, stream Rando
 	for i := 0; i < 100; i++ {
 		var response *RandomNumberResponse = &RandomNumberResponse{
 			OriginalNumber: request.Number,
-			TotalNumber:    randomInt + int64(i),
+			TotalNumber:    randomInt + int64(request.Number),
 		}
 
 		var streamErr error = stream.Send(response)
 		if streamErr != nil {
-			panic(streamErr)
+			return streamErr
 		}
 	}
 
@@ -27,15 +27,15 @@ func (server *Server) AddRandomNumber(request *RandomNumberRequest, stream Rando
 
 func (server *Server) SubstractRandomNumber(request *RandomNumberRequest, stream RandomService_SubstractRandomNumberServer) error {
 	var randomInt int64 = rand.Int63()
-	for i := 0; i < 100; i++ {
+	for i := 0; i <= 100; i++ {
 		var response *RandomNumberResponse = &RandomNumberResponse{
 			OriginalNumber: request.Number,
-			TotalNumber:    randomInt - int64(i),
+			TotalNumber:    (randomInt - int64(i)) - request.Number,
 		}
 
 		var streamErr error = stream.Send(response)
 		if streamErr != nil {
-			panic(streamErr)
+			return streamErr
 		}
 	}
 

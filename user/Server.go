@@ -19,15 +19,16 @@ func (server *Server) GetUser(cxt context.Context, req *UserRequest) (*User, err
 
 func (server *Server) RegisterUsers(stream UserService_RegisterUsersServer) error {
 	for {
+		//consume stream
 		currentRequest, requestError := stream.Recv()
 		if requestError != nil && requestError != io.EOF {
 			return requestError
 		}
-		fmt.Println("server recieved: ", currentRequest)
 		if requestError == io.EOF {
+			fmt.Println("finished consuming stream")
 			break
 		}
-
+		fmt.Println("server recieved: ", currentRequest)
 		var newUser *User = &User{
 			UserId: currentRequest.Username,
 			Email:  "",
@@ -37,7 +38,10 @@ func (server *Server) RegisterUsers(stream UserService_RegisterUsersServer) erro
 			User: newUser,
 		}
 
-		stream.Send(response)
+		var sendingError error = stream.Send(response)
+		if sendingError != nil {
+			fmt.Println(sendingError)
+		}
 	}
 	return nil
 }
