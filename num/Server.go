@@ -3,6 +3,7 @@ package num
 import (
 	"errors"
 	"fmt"
+	"io"
 	"time"
 )
 
@@ -35,5 +36,26 @@ func (serverInstance *Server) Rnd(request *NumRequest, stream NumService_RndServ
 			return err
 		}
 	}
+	return nil
+}
+
+func (serverInstance *Server) Sum(stream NumService_SumServer) error {
+	var total int64 = 0
+	for {
+		req, reqError := stream.Recv()
+		if reqError != nil && reqError != io.EOF {
+			return reqError
+		}
+		if reqError == io.EOF {
+			break
+		}
+		total = total + req.GetNumber()
+		fmt.Println("server recieved ", req.String())
+	}
+	var response *SumResponse = &SumResponse{
+		Total: total,
+	}
+	stream.SendAndClose(response)
+	fmt.Println("server sent ", response.String())
 	return nil
 }

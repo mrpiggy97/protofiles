@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NumServiceClient interface {
 	Rnd(ctx context.Context, in *NumRequest, opts ...grpc.CallOption) (NumService_RndClient, error)
+	Sum(ctx context.Context, opts ...grpc.CallOption) (NumService_SumClient, error)
 }
 
 type numServiceClient struct {
@@ -61,11 +62,46 @@ func (x *numServiceRndClient) Recv() (*NumResponse, error) {
 	return m, nil
 }
 
+func (c *numServiceClient) Sum(ctx context.Context, opts ...grpc.CallOption) (NumService_SumClient, error) {
+	stream, err := c.cc.NewStream(ctx, &NumService_ServiceDesc.Streams[1], "/numbers.NumService/Sum", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &numServiceSumClient{stream}
+	return x, nil
+}
+
+type NumService_SumClient interface {
+	Send(*SumRequest) error
+	CloseAndRecv() (*SumResponse, error)
+	grpc.ClientStream
+}
+
+type numServiceSumClient struct {
+	grpc.ClientStream
+}
+
+func (x *numServiceSumClient) Send(m *SumRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *numServiceSumClient) CloseAndRecv() (*SumResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(SumResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // NumServiceServer is the server API for NumService service.
 // All implementations must embed UnimplementedNumServiceServer
 // for forward compatibility
 type NumServiceServer interface {
 	Rnd(*NumRequest, NumService_RndServer) error
+	Sum(NumService_SumServer) error
 	mustEmbedUnimplementedNumServiceServer()
 }
 
@@ -75,6 +111,9 @@ type UnimplementedNumServiceServer struct {
 
 func (UnimplementedNumServiceServer) Rnd(*NumRequest, NumService_RndServer) error {
 	return status.Errorf(codes.Unimplemented, "method Rnd not implemented")
+}
+func (UnimplementedNumServiceServer) Sum(NumService_SumServer) error {
+	return status.Errorf(codes.Unimplemented, "method Sum not implemented")
 }
 func (UnimplementedNumServiceServer) mustEmbedUnimplementedNumServiceServer() {}
 
@@ -110,6 +149,32 @@ func (x *numServiceRndServer) Send(m *NumResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _NumService_Sum_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(NumServiceServer).Sum(&numServiceSumServer{stream})
+}
+
+type NumService_SumServer interface {
+	SendAndClose(*SumResponse) error
+	Recv() (*SumRequest, error)
+	grpc.ServerStream
+}
+
+type numServiceSumServer struct {
+	grpc.ServerStream
+}
+
+func (x *numServiceSumServer) SendAndClose(m *SumResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *numServiceSumServer) Recv() (*SumRequest, error) {
+	m := new(SumRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // NumService_ServiceDesc is the grpc.ServiceDesc for NumService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -122,6 +187,11 @@ var NumService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "Rnd",
 			Handler:       _NumService_Rnd_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "Sum",
+			Handler:       _NumService_Sum_Handler,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "protofiles/Num.proto",

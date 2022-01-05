@@ -104,3 +104,41 @@ func TestRnd(testCase *testing.T) {
 	defer waiter.Done()
 	defer client.conn.Close()
 }
+
+func TestSum(testCase *testing.T) {
+	//run test servers
+	var getClient chan responseWrapper = make(chan responseWrapper, 1)
+	var stopServer *sync.WaitGroup = new(sync.WaitGroup)
+	stopServer.Add(1)
+	go runServer(stopServer)
+	go runClient(getClient)
+
+	//get client
+	var client responseWrapper = <-getClient
+
+	//get stream
+	stream, streamError := client.client.Sum(context.Background())
+	if streamError != nil {
+		testCase.Error("failed to establish connection between test servers")
+	}
+
+	//make requests
+	for i := 0; i <= 5; i++ {
+		var request *num.SumRequest = &num.SumRequest{
+			Number: int64(i),
+		}
+		var sendingError error = stream.Send(request)
+		if sendingError != nil {
+			testCase.Error(sendingError)
+		}
+	}
+	res, resError := stream.CloseAndRecv()
+	if resError != nil {
+		testCase.Error("expected resError to be nil, instead got ", resError)
+	}
+	if res.Total != 15 {
+		testCase.Error("expected res.Total to be 15,instead got ", res.Total)
+	}
+	defer stopServer.Done()
+	defer client.conn.Close()
+}

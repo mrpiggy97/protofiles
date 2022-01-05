@@ -15,6 +15,15 @@ message NumResponse{
     int64 remaining = 2;
 }
 
+message SumRequest{
+    int64 Number = 1;
+}
+
+message SumResponse{
+    int64 Total = 1;
+}
+
 service NumService{
     rpc Rnd(NumRequest)returns(stream NumResponse);
+    rpc Sum(stream SumRequest)returns(SumResponse);
 }
