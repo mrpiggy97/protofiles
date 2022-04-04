@@ -1,0 +1,15 @@
+syntax="proto3";
+
+option go_package="./primes";
+
+message PrimeResponse{
+    int64 Count = 1;
+}
+
+message PrimeRequest{
+    int64 Number = 1;
+}
+
+service PrimeService{
+    rpc GetCount(stream PrimeRequest)returns(stream PrimeResponse);
+}
